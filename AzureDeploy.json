@@ -1,0 +1,280 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "jmeterVMName": {
+            "type": "string",
+            "minLength": 1
+        },
+        "jmeterVMAdminUserName": {
+            "type": "string",
+            "minLength": 1
+        },
+        "jmeterVMAdminPassword": {
+            "type": "securestring"
+        },
+        "jmeterVMUbuntuOSVersion": {
+            "type": "string",
+            "defaultValue": "14.04.2-LTS",
+            "allowedValues": [
+                "12.04.5-LTS",
+                "14.04.2-LTS",
+                "15.04"
+            ]
+        },
+        "Jmeter_vm_storageType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_ZRS",
+                "Standard_GRS",
+                "Standard_RAGRS",
+                "Premium_LRS"
+            ]
+        },
+		"jmeterDNSName": {
+            "type": "string",
+            "minLength": 1
+        },
+		"VnetName": {
+            "type": "string",
+            "minLength": 1
+        },
+		"SubnetName": {
+            "type": "string",
+            "minLength": 1
+        }
+    },
+	
+    "resources": [
+		{
+			"name": "[variables('publicIPjmeter')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+			"properties": {
+				"publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+				"dnsSettings": {
+					"domainNameLabel": "[parameters('jmeterDNSName')]"
+				}
+			}
+		},
+        {
+            "name": "[variables('jmeterVMNicName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+			"dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPjmeter'))]"
+                
+            ],
+            "tags": {
+                "displayName": "jmeterVMNic"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+							
+                            "privateIPAllocationMethod": "Dynamic",
+							"publicIPAddress": {
+								"id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPjmeter'))]"
+							},
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            },
+							"primary": true
+                        }
+                    },
+					{
+                        "name": "ipconfig2",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+					{
+                        "name": "ipconfig3",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+					{
+                        "name": "ipconfig4",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+					{
+                        "name": "ipconfig5",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+					{
+                        "name": "ipconfig6",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+					{
+                        "name": "ipconfig7",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+					{
+                        "name": "ipconfig8",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+					{
+                        "name": "ipconfig9",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+					{
+                        "name": "ipconfig10",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+					{
+                        "name": "ipconfig11",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+							"subnet": {
+                                "id": "[variables('jmeterVMsubnet')]"
+                            }
+                        }
+                    },
+                ]
+            }
+        },
+        {
+            "name": "[parameters('jmeterVMName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('jmeterVMNicName'))]"
+            ],
+            "tags": {
+                "displayName": "jmeterVM"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[variables('jmeterVMVmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('jmeterVMName')]",
+                    "adminUsername": "[parameters('jmeterVMAdminUsername')]",
+                    "adminPassword": "[parameters('jmeterVMAdminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('jmeterVMImagePublisher')]",
+                        "offer": "[variables('jmeterVMImageOffer')]",
+                        "sku": "[parameters('jmeterVMUbuntuOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "jmeterVMOSDisk",
+                        "vhd": {
+                            "uri": "[concat('http://', variables('storageName'), '.blob.core.windows.net/', variables('jmeterVMStorageAccountContainerName'), '/', variables('jmeterVMOSDiskName'), '.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('jmeterVMNicName'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "[variables('storageName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "tags": {
+                "displayName": "Jmeter_vm_storage"
+            },
+            "properties": {
+                "accountType": "[parameters('Jmeter_vm_storageType')]"
+            }
+        },
+		{
+			"type":			"Microsoft.Compute/virtualMachines/extensions",
+			"apiVersion":	"2015-06-15",
+			"name":			"[concat(parameters('jmeterVMName'),'/','install_jmeter')]",
+			"location":		"[resourceGroup().location]",
+			"dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('jmeterVMName'))]"
+                
+            ],	
+			"tags":			{ "displayName": "install_jmeter" },
+
+			"properties": {
+				"publisher":				"Microsoft.OSTCExtensions",
+				"type":						"CustomScriptForLinux",
+				"typeHandlerVersion":		"1.4",
+				"autoUpgradeMinorVersion":	true,
+				"settings":					{ "fileUris": [ "[variables('scriptUri')]" ], "commandToExecute": "[variables('cmdExec')]" }
+			}
+		}
+    ],
+    "variables": {
+		
+        "jmeterVMImagePublisher": "Canonical",
+        "jmeterVMImageOffer": "UbuntuServer",
+        "jmeterVMOSDiskName": "jmeterVMOSDisk",
+        "jmeterVMVmSize": "Standard_A2M_V2",
+		"jmeterVMVnetID": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('VnetName'))]",
+		"jmeterVMsubnet": "[concat(variables('jmeterVMVnetID'),'/subnets/', parameters('SubnetName'))]",
+        "jmeterVMStorageAccountContainerName": "vhds",
+        "jmeterVMNicName": "[concat(parameters('jmeterVMName'), 'NetworkInterface')]",
+        "storageName": "[concat('storage', uniqueString(resourceGroup().id))]",
+		"jmeterScriptLocation": "https://raw.githubusercontent.com/federicopalma/UbuntuJmeter/master/Scripts/",
+        "install_jmeterScriptFileName": "install_jmeter.sh",
+		"scriptUri":	"[concat(variables('jmeterScriptLocation'),variables('install_jmeterScriptFileName'))]",
+		"cmdExec":		"[concat('sh ',variables('install_jmeterScriptFileName'))]",
+		"publicIPjmeter": "jmeterpublicipcomm",
+		"publicIPAddressType": "Dynamic"
+    }
+}
